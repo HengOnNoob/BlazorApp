@@ -11,5 +11,7 @@ namespace BlazorApp.Data
         public int QtyNext { get; set; }
         public int QtyChg { get; set; }
 
+        public int QtySum { get; set; }
+
     }
 }
