@@ -95,7 +95,6 @@ namespace BlazorApp.Data
         }
         private async void UpdateStock(object state)
         {
-            // This function must be re-entrant as it's running as a timer interval handler
             await _UpdateLock.WaitAsync();
             try
             {
@@ -119,37 +118,41 @@ namespace BlazorApp.Data
             }
         }
 
-        private bool TryUpdateStockPrice(Stock stock)
+        private async Task TryUpdateStockPrice(Stock stock)
         {
-            Random _updateRnd = new Random();
-            var r = _updateRnd.NextDouble();
-            if (r <= 0.3)
+            await _UpdateLock.WaitAsync();
+            try
             {
-                Random _rnd = new Random();
-                // Random update the stock QTY
-                int change = _rnd.Next(1, 50) * 100;
+                Random _updateRnd = new Random();
+                var r = _updateRnd.NextDouble();
+                if (r <= 0.3)
+                {
+                    Random _rnd = new Random();
+                    // Random update the stock QTY
+                    int change = _rnd.Next(1, 50) * 100;
+                    stock.QtyPrev = stock.QtyNext;
+                    stock.QtyNext = change;
+                    stock.QtyChg = change - stock.QtyPrev;
+                }
+                // Decide if update the spot price
+                _updateRnd = new Random();
+                r = _updateRnd.NextDouble();
+                if (r <= 0.1)
+                {
+                    Random _priceRnd = new Random((int)Math.Floor(stock.spotPrice));
+                    var percentChange = _priceRnd.NextDouble() * 0.002;
+                    var pos = _priceRnd.NextDouble() > 0.51;
+                    var pirce_change = Math.Round(stock.spotPrice * (double)percentChange, 2);
+                    pirce_change = pos ? pirce_change : -pirce_change;
 
-                var tmp = stock.QtyPrev;
-                stock.QtyPrev = stock.QtyNext;
-                stock.QtyNext = change;
-                stock.QtyChg = change - tmp;
+                    stock.spotPrice += pirce_change;
+                    stock.spotPrice = Math.Round(stock.spotPrice, 2);
+                }
             }
-            // Decide if update the spot price
-            _updateRnd = new Random();
-            r = _updateRnd.NextDouble();
-            if (r <= 0.1)
+            finally
             {
-                Random _priceRnd = new Random((int)Math.Floor(stock.spotPrice));
-                var percentChange = _priceRnd.NextDouble() * 0.002;
-                var pos = _priceRnd.NextDouble() > 0.51;
-                var pirce_change = Math.Round(stock.spotPrice * (double)percentChange, 2);
-                pirce_change = pos ? pirce_change : -pirce_change;
-
-                stock.spotPrice += pirce_change;
-                stock.spotPrice = Math.Round(stock.spotPrice, 2);
+                _UpdateLock.Release();
             }
-
-            return true;
         }
     };
 
