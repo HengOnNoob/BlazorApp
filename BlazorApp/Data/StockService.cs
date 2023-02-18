@@ -41,11 +41,11 @@ namespace BlazorApp.Data
 
             var stocks = new List<Stock>
             {
-                new Stock { pos = 1, ticker = "MSFT", spotPrice = 156.5, QtyPrev = 1500, QtyNext = 0 },
-                new Stock { pos = 2, ticker = "AAPL", spotPrice = 137.25, QtyPrev = 2500, QtyNext = 0 },
-                new Stock { pos = 3, ticker = "GOOG", spotPrice = 256.5, QtyPrev = 3500, QtyNext = 0 },
-                new Stock { pos = 4, ticker = "TSLA", spotPrice = 86.35, QtyPrev = 4500, QtyNext = 0 },
-                new Stock { pos = 5, ticker = "SPY", spotPrice = 556.45, QtyPrev = 5500, QtyNext = 0 }
+                new Stock { pos = 1, ticker = "MSFT", spotPrice = 156.5, QtyPrev = 1500, QtyNext = 1600, QtyChg = 100 },
+                new Stock { pos = 2, ticker = "AAPL", spotPrice = 137.25, QtyPrev = 2500, QtyNext = 700, QtyChg = -1800 },
+                new Stock { pos = 3, ticker = "GOOG", spotPrice = 256.5, QtyPrev = 3500, QtyNext = 3500, QtyChg = 0 },
+                new Stock { pos = 4, ticker = "TSLA", spotPrice = 86.35, QtyPrev = 4500, QtyNext = 5000, QtyChg = 500 },
+                new Stock { pos = 5, ticker = "SPY", spotPrice = 556.45, QtyPrev = 5500, QtyNext = 4300, QtyChg = -1200 }
             };
 
             stocks.ForEach(stock => _stocks.TryAdd(stock.ticker, stock));
@@ -118,11 +118,8 @@ namespace BlazorApp.Data
             }
         }
 
-        private async Task TryUpdateStockPrice(Stock stock)
+        private void TryUpdateStockPrice(Stock stock)
         {
-            await _UpdateLock.WaitAsync();
-            try
-            {
                 Random _updateRnd = new Random();
                 var r = _updateRnd.NextDouble();
                 if (r <= 0.3)
@@ -148,11 +145,6 @@ namespace BlazorApp.Data
                     stock.spotPrice += pirce_change;
                     stock.spotPrice = Math.Round(stock.spotPrice, 2);
                 }
-            }
-            finally
-            {
-                _UpdateLock.Release();
-            }
         }
     };
 
